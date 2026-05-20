@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Меню — Melanite Cafe Bar | Вінниця</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --gold:#C9A84C;--gold-light:#E8C96A;--gold-dark:#8B6914;
+      --black:#080808;--black-2:#0F0F0F;--black-3:#171717;--black-4:#1F1F1F;
+      --text:#F0EBE0;--text-muted:#8A7A60;--text-dim:#4A4235;
+      --tr:cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--black);color:var(--text);font-family:'Montserrat',sans-serif;overflow-x:hidden;cursor:none}
+    .cursor{width:8px;height:8px;background:var(--gold);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,background .3s}
+    .cursor-f{width:28px;height:28px;border:1px solid rgba(201,168,76,.5);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998;transform:translate(-50%,-50%)}
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.2rem 3rem;display:flex;align-items:center;gap:2rem;background:rgba(8,8,8,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,168,76,.1)}
+    .nav-logo{text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;letter-spacing:.12em}
+    .logo-m{color:var(--gold)}.logo-r{color:var(--text)}
+    .nav-title{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted)}
+    .nav-back{margin-left:auto;text-decoration:none;color:var(--text-muted);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem;transition:color .3s}
+    .nav-back:hover{color:var(--gold)}
+    .hero{min-height:36vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9rem 2rem 4rem;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(201,168,76,.06),transparent 70%)}
+    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.025) 1px,transparent 1px);background-size:60px 60px}
+    .hero-tag{font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;display:block;position:relative;z-index:1}
+    .hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,8vw,7rem);font-weight:300;color:var(--text);letter-spacing:.08em;line-height:1;position:relative;z-index:1}
+    .hero-title span{color:var(--gold)}
+    .hero-div{display:flex;align-items:center;gap:1rem;width:160px;margin:1.5rem auto}
+    .hdl{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold-dark))}.hdl:last-child{background:linear-gradient(to left,transparent,var(--gold-dark))}
+    .hdg{color:var(--gold);font-size:.55rem}
+    .hero-sub{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted);position:relative;z-index:1}
+    .marquee-wrap{overflow:hidden;background:var(--gold);padding:.8rem 0}
+    .marquee-track{display:flex;gap:2.5rem;white-space:nowrap;animation:marquee 22s linear infinite;width:max-content}
+    .marquee-track span{font-size:.62rem;font-weight:600;letter-spacing:.35em;text-transform:uppercase;color:var(--black)}
+    .mg{color:rgba(0,0,0,.35)!important}
+    @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    .filter-wrap{position:sticky;top:66px;z-index:50;background:rgba(8,8,8,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,168,76,.08);padding:.8rem 2rem;overflow-x:auto}
+    .filter-wrap::-webkit-scrollbar{height:2px}.filter-wrap::-webkit-scrollbar-thumb{background:var(--gold-dark)}
+    .filter-inner{display:flex;gap:.6rem;min-width:max-content;margin:0 auto;max-width:1200px}
+    .fbtn{background:transparent;border:1px solid rgba(201,168,76,.2);color:var(--text-muted);padding:.45rem 1.2rem;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .3s;white-space:nowrap}
+    .fbtn:hover,.fbtn.active{background:var(--gold);color:var(--black);border-color:var(--gold)}
+    .menu-content{max-width:1200px;margin:0 auto;padding:4rem 2rem 6rem}
+    .category{margin-bottom:5rem}
+    .cat-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2.5rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(201,168,76,.15)}
+    .cat-icon{font-size:1.6rem}.cat-name{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,3vw,2.5rem);font-weight:300;color:var(--text);letter-spacing:.06em}
+    .cat-count{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-left:auto}
+    .items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:2px}
+    .mi{background:var(--black-2);border:1px solid rgba(201,168,76,.06);padding:1.5rem 1.8rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;position:relative;overflow:hidden;transition:background .3s,border-color .3s}
+    .mi::after{content:'';position:absolute;bottom:0;left:0;right:100%;height:1px;background:var(--gold);transition:right .5s var(--tr)}
+    .mi:hover{background:var(--black-3);border-color:rgba(201,168,76,.2)}.mi:hover::after{right:0}
+    .mi-info{flex:1;min-width:0}
+    .mi-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:400;color:var(--text);margin-bottom:.3rem;line-height:1.3}
+    .mi-desc{font-size:.7rem;color:var(--text-muted);line-height:1.7}
+    .mi-pw{text-align:right;flex-shrink:0}
+    .mi-price{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;color:var(--gold);white-space:nowrap}
+    .mi-cur{font-size:.75rem;color:var(--text-muted)}.mi-w{font-size:.62rem;color:var(--text-dim);margin-top:.2rem}
+    .sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5px}
+    .set-card{background:var(--black-3);border:1px solid rgba(201,168,76,.15);padding:2.5rem 2rem;position:relative;overflow:hidden;transition:background .4s,border-color .4s}
+    .set-card:hover{background:var(--black-4);border-color:rgba(201,168,76,.4)}
+    .set-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.05),transparent 60%);opacity:0;transition:opacity .4s}
+    .set-card:hover::before{opacity:1}
+    .set-gem{color:var(--gold);font-size:.9rem;margin-bottom:1rem;display:block}
+    .set-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--text);margin-bottom:.8rem;letter-spacing:.05em}
+    .set-comp{font-size:.72rem;color:var(--text-muted);line-height:1.8;margin-bottom:1.5rem}
+    .set-footer{display:flex;justify-content:space-between;align-items:flex-end}
+    .set-wt{font-size:.65rem;color:var(--text-dim)}.set-price{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:var(--gold)}
+    .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s var(--tr),transform .8s var(--tr)}.reveal.visible{opacity:1;transform:none}
+    .footer{background:var(--black);border-top:1px solid rgba(201,168,76,.1);padding:3rem 2rem;text-align:center}
+    .footer-logo{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;color:var(--gold);letter-spacing:.15em;margin-bottom:.5rem}
+    .footer-info{font-size:.72rem;color:var(--text-muted);line-height:2;margin-bottom:1.5rem}
+    .footer-info a{color:var(--gold);text-decoration:none}
+    .footer-back{display:inline-flex;align-items:center;gap:.6rem;background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--gold);padding:.7rem 2rem;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;transition:all .3s}
+    .footer-back:hover{background:var(--gold);color:var(--black)}
+    /* LOADING */
+    .loading-wrap{text-align:center;padding:6rem 2rem}
+    .spinner{width:40px;height:40px;border:2px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.5rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted)}
+    .empty-db{text-align:center;padding:4rem;color:var(--text-muted)}
+    .empty-db-icon{font-size:3rem;margin-bottom:1rem;opacity:.3}
+    .empty-db p{font-size:.8rem;line-height:1.9}
+    @media(max-width:768px){
+      .nav{padding:1rem 1.2rem}.menu-content{padding:2rem 1rem 4rem}
+      .items-grid{grid-template-columns:1fr}.sets-grid{grid-template-columns:1fr}
+      body{cursor:auto}.cursor,.cursor-f{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-f" id="cursorF"></div>
+
+<nav class="nav">
+  <a class="nav-logo" href="index.html"><span class="logo-m">M</span><span class="logo-r">elanite</span></a>
+  <span class="nav-title">Меню</span>
+  <a class="nav-back" href="index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    На головну
+  </a>
+</nav>
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <span class="hero-tag">Cafe Bar Melanite · Вінниця</span>
+  <h1 class="hero-title">На<span>ше</span> Меню</h1>
+  <div class="hero-div"><span class="hdl"></span><span class="hdg">◆</span><span class="hdl"></span></div>
+  <p class="hero-sub">Авторська кухня · Свіжі продукти · З душею</p>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>САЛАТИ</span><span class="mg">◆</span><span>ОСНОВНІ СТРАВИ</span><span class="mg">◆</span>
+    <span>ГАРЯЧІ ЗАКУСКИ</span><span class="mg">◆</span><span>СЕТИ</span><span class="mg">◆</span>
+    <span>ГАРНІРИ</span><span class="mg">◆</span><span>ДЕСЕРТИ</span><span class="mg">◆</span>
+    <span>ДИТЯЧЕ МЕНЮ</span><span class="mg">◆</span>
+    <span>САЛАТИ</span><span class="mg">◆</span><span>ОСНОВНІ СТРАВИ</span><span class="mg">◆</span>
+    <span>ГАРЯЧІ ЗАКУСКИ</span><span class="mg">◆</span><span>СЕТИ</span><span class="mg">◆</span>
+    <span>ГАРНІРИ</span><span class="mg">◆</span><span>ДЕСЕРТИ</span><span class="mg">◆</span>
+    <span>ДИТЯЧЕ МЕНЮ</span><span class="mg">◆</span>
+  </div>
+</div>
+
+<div class="filter-wrap">
+  <div class="filter-inner">
+    <button class="fbtn active" data-f="all" onclick="setCat('all',this)">Всі страви</button>
+    <button class="fbtn" data-f="salads" onclick="setCat('salads',this)">Салати</button>
+    <button class="fbtn" data-f="first" onclick="setCat('first',this)">Перші страви</button>
+    <button class="fbtn" data-f="cold" onclick="setCat('cold',this)">Холодні закуски</button>
+    <button class="fbtn" data-f="hot" onclick="setCat('hot',this)">Гарячі закуски</button>
+    <button class="fbtn" data-f="main" onclick="setCat('main',this)">Основні страви</button>
+    <button class="fbtn" data-f="sets" onclick="setCat('sets',this)">Сети</button>
+    <button class="fbtn" data-f="sides" onclick="setCat('sides',this)">Гарніри</button>
+    <button class="fbtn" data-f="kids" onclick="setCat('kids',this)">Дитяче меню</button>
+    <button class="fbtn" data-f="desserts" onclick="setCat('desserts',this)">Десерти</button>
+  </div>
+</div>
+
+<div class="menu-content" id="menuContent">
+  <div class="loading-wrap">
+    <div class="spinner"></div>
+    <div class="loading-text">Завантаження меню...</div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-logo">MELANITE</div>
+  <div class="footer-info">Хмельницьке шосе, 13 · м. Вінниця<br><a href="tel:0678983371">067-898-33-71</a></div>
+  <a class="footer-back" href="index.html">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2 6l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Повернутись на головну
+  </a>
+</footer>
+
+<script>
+  const API = 'https://melanite-api.onrender.com';
+
+  const CATS = {
+    salads:'🥗 Салати', first:'🍲 Перші страви', cold:'🧀 Холодні закуски',
+    hot:'🔥 Гарячі закуски', main:'🍽 Основні страви', sets:'👑 Сети',
+    sides:'🍟 Гарніри', kids:'👶 Дитяче меню', desserts:'🍰 Десерти'
+  };
+  const CAT_ORDER = ['salads','first','cold','hot','main','sets','sides','kids','desserts'];
+
+  let allItems = [];
+  let currentCat = 'all';
+
+  // CURSOR
+  const cur=document.getElementById('cursor'),curF=document.getElementById('cursorF');
+  let mx=0,my=0,fx=0,fy=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+  (function a(){fx+=(mx-fx)*.12;fy+=(my-fy)*.12;curF.style.left=fx+'px';curF.style.top=fy+'px';requestAnimationFrame(a);})();
+
+  // REVEAL
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});
+  },{threshold:0.08});
+
+  // LOAD FROM API
+  async function loadMenu() {
+    try {
+      const res = await fetch(`${API}/menu`);
+      allItems = await res.json();
+      renderMenu();
+    } catch(e) {
+      document.getElementById('menuContent').innerHTML = `
+        <div class="empty-db">
+          <div class="empty-db-icon">⚠️</div>
+          <p>Не вдалось завантажити меню.<br>Спробуйте пізніше або зателефонуйте:<br><a href="tel:0678983371" style="color:var(--gold)">067-898-33-71</a></p>
+        </div>`;
+    }
+  }
+
+  function renderMenu() {
+    const items = currentCat === 'all' ? allItems : allItems.filter(i => i.category === currentCat);
+
+    if (!items.length) {
+      document.getElementById('menuContent').innerHTML =
+        `<div class="empty-db"><div class="empty-db-icon">🍽</div><p>Страви незабаром з'являться</p></div>`;
+      return;
+    }
+
+    // Group by category
+    const grouped = {};
+    CAT_ORDER.forEach(c => { grouped[c] = []; });
+    items.forEach(item => {
+      if (grouped[item.category]) grouped[item.category].push(item);
+      else grouped[item.category] = [item];
+    });
+
+    let html = '';
+    Object.entries(grouped).forEach(([cat, catItems]) => {
+      if (!catItems.length) return;
+      const icon = CATS[cat]?.split(' ')[0] || '🍴';
+      const name = CATS[cat]?.split(' ').slice(1).join(' ') || cat;
+
+      if (cat === 'sets') {
+        html += `<div class="category reveal">
+          <div class="cat-header">
+            <span class="cat-icon">${icon}</span>
+            <h2 class="cat-name">${name}</h2>
+            <span class="cat-count">${catItems.length} ${catItems.length===1?'сет':'сети'}</span>
+          </div>
+          <div class="sets-grid">`;
+        catItems.forEach(item => {
+          html += `<div class="set-card">
+            <span class="set-gem">◆</span>
+            <div class="set-name">${item.name}</div>
+            ${item.description ? `<div class="set-comp">${item.description}</div>` : ''}
+            <div class="set-footer">
+              <div>
+                ${item.weight ? `<div class="set-wt">${item.weight}</div>` : ''}
+                <div style="font-size:.7rem;color:var(--text-muted)">Ціна сету</div>
+              </div>
+              <div class="set-price">${item.price} <span style="font-size:.9rem;color:var(--text-muted)">грн</span></div>
+            </div>
+          </div>`;
+        });
+        html += `</div></div>`;
+      } else {
+        html += `<div class="category reveal">
+          <div class="cat-header">
+            <span class="cat-icon">${icon}</span>
+            <h2 class="cat-name">${name}</h2>
+            <span class="cat-count">${catItems.length} позицій</span>
+          </div>
+          <div class="items-grid">`;
+        catItems.forEach(item => {
+          html += `<div class="mi">
+            <div class="mi-info">
+              <div class="mi-name">${item.name}</div>
+              ${item.description ? `<div class="mi-desc">${item.description}</div>` : ''}
+            </div>
+            <div class="mi-pw">
+              <div class="mi-price">${item.price} <span class="mi-cur">грн</span></div>
+              ${item.weight ? `<div class="mi-w">${item.weight}</div>` : ''}
+            </div>
+          </div>`;
+        });
+        html += `</div></div>`;
+      }
+    });
+
+    document.getElementById('menuContent').innerHTML = html;
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    document.querySelectorAll('a,button,.mi,.set-card').forEach(el=>{
+      el.addEventListener('mouseenter',()=>{cur.style.transform='translate(-50%,-50%) scale(2.5)';cur.style.background='transparent';cur.style.border='1px solid var(--gold)';});
+      el.addEventListener('mouseleave',()=>{cur.style.transform='translate(-50%,-50%) scale(1)';cur.style.background='var(--gold)';cur.style.border='none';});
+    });
+  }
+
+  function setCat(cat, el) {
+    currentCat = cat;
+    document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    renderMenu();
+    window.scrollTo({top: document.querySelector('.filter-wrap').offsetTop - 70, behavior:'smooth'});
+  }
+
+  loadMenu();
+</script>
+</body>
+</html>
