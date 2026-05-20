@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: melanite-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://restaurant_db_oq5k_user:H40Bdjlc1TOPgwzBcXfgpShwucugqDdH@dpg-d7tijdpj2pic73abmg00-a.oregon-postgres.render.com/restaurant_db_oq5k
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production

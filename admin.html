@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Melanite — Адмін панель</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --gold:#C9A84C;--gold-light:#E8C96A;--gold-dark:#8B6914;
+      --black:#080808;--black-2:#0F0F0F;--black-3:#171717;--black-4:#1F1F1F;--black-5:#282828;
+      --text:#F0EBE0;--text-muted:#8A7A60;--text-dim:#4A4235;
+      --green:#2ecc71;--red:#e74c3c;--tr:cubic-bezier(0.25,0.46,0.45,0.94);
+
+      /* ЗАМІНИТИ НА СВІЙ API URL після деплою на Render */
+      --api: 'https://melanite-api.onrender.com';
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--black);color:var(--text);font-family:'Montserrat',sans-serif;min-height:100vh}
+
+    /* LOGIN */
+    .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--black);position:relative;overflow:hidden}
+    .login-page::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(201,168,76,.07),transparent 70%)}
+    .login-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.025) 1px,transparent 1px);background-size:60px 60px}
+    .login-box{background:var(--black-3);border:1px solid rgba(201,168,76,.2);padding:3rem;width:100%;max-width:400px;position:relative;z-index:1}
+    .login-logo{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;color:var(--gold);letter-spacing:.15em;text-align:center;margin-bottom:.3rem}
+    .login-sub{text-align:center;font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2.5rem}
+    .login-divider{width:40px;height:1px;background:var(--gold);margin:.8rem auto 2.5rem}
+
+    .form-group{margin-bottom:1.2rem}
+    .form-label{display:block;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+    .form-input{width:100%;background:var(--black-4);border:1px solid rgba(201,168,76,.15);border-bottom:1px solid rgba(201,168,76,.4);color:var(--text);padding:.85rem 1rem;font-size:.85rem;font-family:'Montserrat',sans-serif;outline:none;transition:border-color .3s}
+    .form-input:focus{border-color:var(--gold)}
+    .form-input::placeholder{color:var(--text-dim)}
+    select.form-input option{background:var(--black-4)}
+
+    .btn{width:100%;background:var(--gold);color:var(--black);border:none;padding:1rem;font-size:.75rem;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;font-weight:600;transition:all .3s;position:relative;overflow:hidden}
+    .btn:hover{background:var(--gold-light)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn-outline{background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--text-muted);padding:.6rem 1.2rem;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .3s}
+    .btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+    .btn-sm{padding:.5rem 1rem;font-size:.62rem;width:auto;letter-spacing:.15em}
+    .btn-red{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);color:#e74c3c}
+    .btn-red:hover{background:rgba(231,76,60,.25)}
+    .btn-green{background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);color:#2ecc71}
+    .btn-green:hover{background:rgba(46,204,113,.25)}
+
+    .error-msg{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;padding:.8rem 1rem;font-size:.75rem;margin-bottom:1rem;display:none}
+    .error-msg.show{display:block}
+
+    /* ADMIN LAYOUT */
+    .admin-page{display:none;min-height:100vh}
+    .admin-page.show{display:flex;flex-direction:column}
+
+    .admin-nav{background:var(--black-2);border-bottom:1px solid rgba(201,168,76,.12);padding:1rem 2rem;display:flex;align-items:center;gap:2rem;position:sticky;top:0;z-index:100}
+    .admin-logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--gold);letter-spacing:.12em}
+    .admin-nav-tag{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--text-muted)}
+    .admin-user{margin-left:auto;display:flex;align-items:center;gap:1rem}
+    .admin-user span{font-size:.72rem;color:var(--text-muted)}
+    .admin-user strong{color:var(--gold)}
+
+    .admin-body{display:grid;grid-template-columns:240px 1fr;flex:1}
+
+    /* SIDEBAR */
+    .sidebar{background:var(--black-2);border-right:1px solid rgba(201,168,76,.08);padding:2rem 0}
+    .sidebar-item{display:flex;align-items:center;gap:.8rem;padding:.85rem 1.5rem;cursor:pointer;transition:all .3s;border-left:2px solid transparent;font-size:.75rem;letter-spacing:.1em;color:var(--text-muted)}
+    .sidebar-item:hover{color:var(--text);background:rgba(201,168,76,.04)}
+    .sidebar-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(201,168,76,.05)}
+    .sidebar-icon{font-size:1rem;width:20px;text-align:center}
+    .sidebar-divider{height:1px;background:rgba(201,168,76,.08);margin:1rem 1.5rem}
+
+    /* MAIN CONTENT */
+    .admin-main{padding:2.5rem;overflow-y:auto}
+
+    .page-header{margin-bottom:2.5rem}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:var(--text);margin-bottom:.3rem}
+    .page-sub{font-size:.72rem;color:var(--text-muted)}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2.5rem}
+    .stat-card{background:var(--black-3);border:1px solid rgba(201,168,76,.1);padding:1.5rem;transition:border-color .3s}
+    .stat-card:hover{border-color:rgba(201,168,76,.3)}
+    .stat-label{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.5rem}
+    .stat-val{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;color:var(--gold);line-height:1}
+
+    /* TABS */
+    .tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:1px solid rgba(201,168,76,.1)}
+    .tab{padding:.7rem 1.5rem;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .3s}
+    .tab:hover{color:var(--text)}
+    .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+    /* ADD FORM */
+    .add-form{background:var(--black-3);border:1px solid rgba(201,168,76,.12);padding:2rem;margin-bottom:2rem}
+    .add-form-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;color:var(--text);margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .form-grid-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem}
+    .form-full{grid-column:1/-1}
+    .form-actions{display:flex;gap:.8rem;margin-top:1.5rem;align-items:center}
+
+    /* MENU TABLE */
+    .menu-table-wrap{background:var(--black-3);border:1px solid rgba(201,168,76,.1);overflow:hidden}
+    .menu-table-header{display:grid;grid-template-columns:2fr 1fr 80px 80px 100px 120px;gap:1rem;padding:1rem 1.5rem;background:var(--black-4);border-bottom:1px solid rgba(201,168,76,.1)}
+    .th{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted)}
+
+    .menu-row{display:grid;grid-template-columns:2fr 1fr 80px 80px 100px 120px;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid rgba(201,168,76,.06);align-items:center;transition:background .2s}
+    .menu-row:hover{background:rgba(201,168,76,.03)}
+    .menu-row:last-child{border-bottom:none}
+    .row-name{font-size:.82rem;color:var(--text);font-weight:500}
+    .row-desc{font-size:.68rem;color:var(--text-muted);margin-top:.2rem}
+    .row-cat{font-size:.68rem;color:var(--text-muted)}
+    .row-weight{font-size:.75rem;color:var(--text-muted)}
+    .row-price{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--gold)}
+    .row-actions{display:flex;gap:.4rem}
+
+    .badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .7rem}
+    .badge-active{background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.2)}
+    .badge-inactive{background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.2)}
+
+    .empty-state{text-align:center;padding:4rem;color:var(--text-muted);font-size:.82rem}
+    .empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.3}
+
+    /* EDIT MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:all .3s}
+    .modal-overlay.show{opacity:1;visibility:visible}
+    .modal{background:var(--black-3);border:1px solid rgba(201,168,76,.2);padding:2.5rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform .3s}
+    .modal-overlay.show .modal{transform:translateY(0)}
+    .modal-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--text);margin-bottom:2rem;display:flex;justify-content:space-between;align-items:center}
+    .modal-close{background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;transition:color .2s}
+    .modal-close:hover{color:var(--gold)}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:2rem;right:2rem;background:var(--black-3);border:1px solid rgba(201,168,76,.3);padding:1rem 1.5rem;font-size:.78rem;color:var(--text);z-index:1000;transform:translateY(100px);opacity:0;transition:all .4s var(--tr);display:flex;align-items:center;gap:.8rem;max-width:320px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast-icon{font-size:1.1rem}
+    .toast.success{border-color:rgba(46,204,113,.4)}
+    .toast.error{border-color:rgba(231,76,60,.4)}
+
+    /* CATEGORY FILTER */
+    .cat-filter{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+    .cat-chip{background:transparent;border:1px solid rgba(201,168,76,.15);color:var(--text-muted);padding:.35rem .9rem;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .3s}
+    .cat-chip:hover,.cat-chip.active{background:var(--gold);color:var(--black);border-color:var(--gold)}
+
+    /* LOADING */
+    .loading{text-align:center;padding:3rem;color:var(--text-muted);font-size:.8rem}
+    .spinner{width:30px;height:30px;border:2px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* SEARCH */
+    .search-wrap{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center}
+    .search-input{flex:1;background:var(--black-4);border:1px solid rgba(201,168,76,.15);color:var(--text);padding:.7rem 1rem;font-size:.8rem;font-family:'Montserrat',sans-serif;outline:none;transition:border-color .3s}
+    .search-input:focus{border-color:var(--gold)}
+    .search-input::placeholder{color:var(--text-dim)}
+
+    /* SECTION PAGES */
+    .section-page{display:none}
+    .section-page.active{display:block}
+
+    /* PASSWORD FORM */
+    .pass-form{background:var(--black-3);border:1px solid rgba(201,168,76,.12);padding:2rem;max-width:400px}
+
+    @media(max-width:900px){
+      .admin-body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .stats-grid{grid-template-columns:1fr 1fr}
+      .menu-table-header,.menu-row{grid-template-columns:1fr 80px 100px}
+      .th:nth-child(2),.th:nth-child(3),.th:nth-child(4),
+      .row-cat,.row-weight,.badge{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="login-page" id="loginPage">
+  <div class="login-grid"></div>
+  <div class="login-box">
+    <div class="login-logo">MELANITE</div>
+    <div class="login-sub">Адміністратор</div>
+    <div class="login-divider"></div>
+
+    <div class="error-msg" id="loginError"></div>
+
+    <div class="form-group">
+      <label class="form-label">Логін</label>
+      <input class="form-input" id="loginUsername" type="text" placeholder="admin" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Пароль</label>
+      <input class="form-input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="btn" id="loginBtn" onclick="doLogin()">Увійти</button>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div class="admin-page" id="adminPage">
+
+  <!-- NAV -->
+  <nav class="admin-nav">
+    <div class="admin-logo">MELANITE</div>
+    <div class="admin-nav-tag">Адмін панель</div>
+    <div class="admin-user">
+      <span>Вхід як <strong id="adminUsername">admin</strong></span>
+      <button class="btn-outline btn-sm" onclick="doLogout()">Вийти</button>
+    </div>
+  </nav>
+
+  <div class="admin-body">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-item active" onclick="showSection('dashboard')">
+        <span class="sidebar-icon">📊</span> Дашборд
+      </div>
+      <div class="sidebar-item" onclick="showSection('menu')">
+        <span class="sidebar-icon">🍽</span> Меню
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item" onclick="showSection('settings')">
+        <span class="sidebar-icon">⚙️</span> Налаштування
+      </div>
+      <div class="sidebar-item" onclick="window.open('index.html','_blank')">
+        <span class="sidebar-icon">🌐</span> Перейти на сайт
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="admin-main">
+
+      <!-- DASHBOARD -->
+      <div class="section-page active" id="sec-dashboard">
+        <div class="page-header">
+          <div class="page-title">Дашборд</div>
+          <div class="page-sub">Огляд меню Melanite</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Всього страв</div>
+            <div class="stat-val" id="stat-total">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Активних</div>
+            <div class="stat-val" id="stat-active">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Категорій</div>
+            <div class="stat-val" id="stat-cats">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Прихованих</div>
+            <div class="stat-val" id="stat-hidden">—</div>
+          </div>
+        </div>
+        <div class="add-form">
+          <div class="add-form-title">⚡ Швидке додавання страви</div>
+          <div class="form-grid-3">
+            <div class="form-group form-full">
+              <label class="form-label">Категорія</label>
+              <select class="form-input" id="q-cat">
+                <option value="salads">🥗 Салати</option>
+                <option value="first">🍲 Перші страви</option>
+                <option value="cold">🧀 Холодні закуски</option>
+                <option value="hot">🔥 Гарячі закуски</option>
+                <option value="main">🍽 Основні страви</option>
+                <option value="sets">👑 Сети</option>
+                <option value="sides">🍟 Гарніри</option>
+                <option value="kids">👶 Дитяче меню</option>
+                <option value="desserts">🍰 Десерти</option>
+              </select>
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Назва страви *</label>
+              <input class="form-input" id="q-name" placeholder="Наприклад: Салат Цезар"/>
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Опис</label>
+              <input class="form-input" id="q-desc" placeholder="Інгредієнти, особливості..."/>
+            </div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Ціна (грн) *</label>
+              <input class="form-input" id="q-price" type="number" placeholder="280"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Вага</label>
+              <input class="form-input" id="q-weight" placeholder="200 г"/>
+            </div>
+            <div></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-sm" style="width:auto;padding:.8rem 2rem" onclick="quickAdd()">+ Додати страву</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENU -->
+      <div class="section-page" id="sec-menu">
+        <div class="page-header">
+          <div class="page-title">Управління меню</div>
+          <div class="page-sub">Додавай, редагуй та видаляй страви</div>
+        </div>
+
+        <div class="search-wrap">
+          <input class="search-input" id="searchInput" placeholder="🔍 Пошук по назві..." oninput="filterMenu()"/>
+          <button class="btn-outline btn-sm" onclick="loadMenu()">↺ Оновити</button>
+        </div>
+
+        <div class="cat-filter" id="catFilter">
+          <button class="cat-chip active" data-cat="all" onclick="setCatFilter('all',this)">Всі</button>
+          <button class="cat-chip" data-cat="salads" onclick="setCatFilter('salads',this)">Салати</button>
+          <button class="cat-chip" data-cat="first" onclick="setCatFilter('first',this)">Перші страви</button>
+          <button class="cat-chip" data-cat="cold" onclick="setCatFilter('cold',this)">Холодні закуски</button>
+          <button class="cat-chip" data-cat="hot" onclick="setCatFilter('hot',this)">Гарячі закуски</button>
+          <button class="cat-chip" data-cat="main" onclick="setCatFilter('main',this)">Основні</button>
+          <button class="cat-chip" data-cat="sets" onclick="setCatFilter('sets',this)">Сети</button>
+          <button class="cat-chip" data-cat="sides" onclick="setCatFilter('sides',this)">Гарніри</button>
+          <button class="cat-chip" data-cat="kids" onclick="setCatFilter('kids',this)">Дитяче</button>
+          <button class="cat-chip" data-cat="desserts" onclick="setCatFilter('desserts',this)">Десерти</button>
+        </div>
+
+        <div id="menuTableWrap"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="section-page" id="sec-settings">
+        <div class="page-header">
+          <div class="page-title">Налаштування</div>
+          <div class="page-sub">Зміна паролю адміністратора</div>
+        </div>
+        <div class="pass-form">
+          <div class="form-group">
+            <label class="form-label">Старий пароль</label>
+            <input class="form-input" id="oldPass" type="password"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Новий пароль</label>
+            <input class="form-input" id="newPass" type="password"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Підтвердити пароль</label>
+            <input class="form-input" id="confirmPass" type="password"/>
+          </div>
+          <button class="btn" onclick="changePassword()">Змінити пароль</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">
+      Редагувати страву
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <input type="hidden" id="edit-id"/>
+    <div class="form-group">
+      <label class="form-label">Категорія</label>
+      <select class="form-input" id="edit-cat">
+        <option value="salads">🥗 Салати</option>
+        <option value="first">🍲 Перші страви</option>
+        <option value="cold">🧀 Холодні закуски</option>
+        <option value="hot">🔥 Гарячі закуски</option>
+        <option value="main">🍽 Основні страви</option>
+        <option value="sets">👑 Сети</option>
+        <option value="sides">🍟 Гарніри</option>
+        <option value="kids">👶 Дитяче меню</option>
+        <option value="desserts">🍰 Десерти</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Назва *</label>
+      <input class="form-input" id="edit-name"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Опис</label>
+      <textarea class="form-input" id="edit-desc" rows="3" style="resize:none"></textarea>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Ціна (грн) *</label>
+        <input class="form-input" id="edit-price" type="number"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Вага</label>
+        <input class="form-input" id="edit-weight"/>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-sm" style="width:auto;padding:.8rem 2rem" onclick="saveEdit()">Зберегти</button>
+      <button class="btn-outline btn-sm" onclick="closeModal()">Скасувати</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✓</span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────
+  // ВАЖЛИВО: після деплою на Render змінити на свій URL!
+  const API = 'https://melanite-api.onrender.com';
+
+  let token = localStorage.getItem('melanite_token');
+  let allItems = [];
+  let currentCat = 'all';
+
+  // ── INIT ────────────────────────────────────────────────────
+  if (token) showAdmin();
+
+  // ── LOGIN ───────────────────────────────────────────────────
+  document.getElementById('loginPassword').addEventListener('keypress', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  async function doLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('loginError');
+
+    if (!username || !password) {
+      showError(err, 'Введіть логін та пароль');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Вхід...';
+    err.classList.remove('show');
+
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      token = data.token;
+      localStorage.setItem('melanite_token', token);
+      localStorage.setItem('melanite_user', data.username);
+      showAdmin();
+    } catch (e) {
+      showError(err, e.message || 'Помилка підключення до сервера');
+      btn.disabled = false;
+      btn.textContent = 'Увійти';
+    }
+  }
+
+  function doLogout() {
+    localStorage.removeItem('melanite_token');
+    localStorage.removeItem('melanite_user');
+    token = null;
+    document.getElementById('adminPage').classList.remove('show');
+    document.getElementById('loginPage').style.display = 'flex';
+    allItems = [];
+  }
+
+  function showAdmin() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminPage').classList.add('show');
+    document.getElementById('adminUsername').textContent =
+      localStorage.getItem('melanite_user') || 'admin';
+    loadMenu();
+    loadStats();
+  }
+
+  // ── API HELPERS ─────────────────────────────────────────────
+  async function apiFetch(path, options = {}) {
+    const res = await fetch(`${API}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+      }
+    });
+    if (res.status === 401) { doLogout(); return; }
+    return res.json();
+  }
+
+  // ── LOAD MENU ───────────────────────────────────────────────
+  async function loadMenu() {
+    document.getElementById('menuTableWrap').innerHTML =
+      `<div class="loading"><div class="spinner"></div>Завантаження...</div>`;
+
+    try {
+      const data = await apiFetch('/menu/all');
+      allItems = data || [];
+      renderMenu();
+      updateStats();
+    } catch {
+      document.getElementById('menuTableWrap').innerHTML =
+        `<div class="empty-state"><div class="empty-icon">⚠️</div>Помилка завантаження</div>`;
+    }
+  }
+
+  function renderMenu() {
+    const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    let items = allItems;
+
+    if (currentCat !== 'all') items = items.filter(i => i.category === currentCat);
+    if (search) items = items.filter(i =>
+      i.name.toLowerCase().includes(search) ||
+      (i.description || '').toLowerCase().includes(search)
+    );
+
+    const catNames = {
+      salads:'🥗 Салати', first:'🍲 Перші страви', cold:'🧀 Холодні закуски',
+      hot:'🔥 Гарячі закуски', main:'🍽 Основні страви', sets:'👑 Сети',
+      sides:'🍟 Гарніри', kids:'👶 Дитяче меню', desserts:'🍰 Десерти'
+    };
+
+    if (!items.length) {
+      document.getElementById('menuTableWrap').innerHTML =
+        `<div class="empty-state"><div class="empty-icon">🍽</div>Страви не знайдено.<br>Додай першу страву!</div>`;
+      return;
+    }
+
+    let html = `
+      <div class="menu-table-wrap">
+        <div class="menu-table-header">
+          <div class="th">Назва</div>
+          <div class="th">Категорія</div>
+          <div class="th">Вага</div>
+          <div class="th">Ціна</div>
+          <div class="th">Статус</div>
+          <div class="th">Дії</div>
+        </div>`;
+
+    items.forEach(item => {
+      html += `
+        <div class="menu-row" id="row-${item.id}">
+          <div>
+            <div class="row-name">${item.name}</div>
+            ${item.description ? `<div class="row-desc">${item.description.substring(0,60)}${item.description.length>60?'...':''}</div>` : ''}
+          </div>
+          <div class="row-cat">${catNames[item.category] || item.category}</div>
+          <div class="row-weight">${item.weight || '—'}</div>
+          <div class="row-price">${item.price} <span style="font-size:.7rem;color:var(--text-muted)">грн</span></div>
+          <div>
+            <span class="badge ${item.is_active ? 'badge-active' : 'badge-inactive'}">
+              ${item.is_active ? '● Активна' : '○ Прихована'}
+            </span>
+          </div>
+          <div class="row-actions">
+            <button class="btn-outline btn-sm" onclick="openEdit(${item.id})" title="Редагувати">✏️</button>
+            <button class="btn-outline btn-sm" onclick="toggleItem(${item.id})" title="${item.is_active?'Приховати':'Показати'}">
+              ${item.is_active ? '🙈' : '👁'}
+            </button>
+            <button class="btn-outline btn-sm btn-red" onclick="deleteItem(${item.id},'${item.name.replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </div>`;
+    });
+
+    html += '</div>';
+    document.getElementById('menuTableWrap').innerHTML = html;
+  }
+
+  function filterMenu() { renderMenu(); }
+
+  function setCatFilter(cat, el) {
+    currentCat = cat;
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderMenu();
+  }
+
+  // ── STATS ───────────────────────────────────────────────────
+  function updateStats() {
+    const total = allItems.length;
+    const active = allItems.filter(i => i.is_active).length;
+    const cats = [...new Set(allItems.map(i => i.category))].length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-active').textContent = active;
+    document.getElementById('stat-cats').textContent = cats;
+    document.getElementById('stat-hidden').textContent = total - active;
+  }
+
+  async function loadStats() { /* triggered by loadMenu */ }
+
+  // ── QUICK ADD ───────────────────────────────────────────────
+  async function quickAdd() {
+    const cat   = document.getElementById('q-cat').value;
+    const name  = document.getElementById('q-name').value.trim();
+    const desc  = document.getElementById('q-desc').value.trim();
+    const price = parseInt(document.getElementById('q-price').value);
+    const weight= document.getElementById('q-weight').value.trim();
+
+    if (!name || !price) { showToast('Введіть назву та ціну', 'error'); return; }
+
+    try {
+      await apiFetch('/menu', {
+        method: 'POST',
+        body: JSON.stringify({ category: cat, name, description: desc, price, weight })
+      });
+      showToast(`"${name}" додано! ✅`);
+      document.getElementById('q-name').value = '';
+      document.getElementById('q-desc').value = '';
+      document.getElementById('q-price').value = '';
+      document.getElementById('q-weight').value = '';
+      loadMenu();
+    } catch (e) {
+      showToast('Помилка додавання', 'error');
+    }
+  }
+
+  // ── EDIT MODAL ──────────────────────────────────────────────
+  function openEdit(id) {
+    const item = allItems.find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-cat').value = item.category;
+    document.getElementById('edit-name').value = item.name;
+    document.getElementById('edit-desc').value = item.description || '';
+    document.getElementById('edit-price').value = item.price;
+    document.getElementById('edit-weight').value = item.weight || '';
+    document.getElementById('editModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.remove('show');
+  }
+
+  async function saveEdit() {
+    const id     = document.getElementById('edit-id').value;
+    const cat    = document.getElementById('edit-cat').value;
+    const name   = document.getElementById('edit-name').value.trim();
+    const desc   = document.getElementById('edit-desc').value.trim();
+    const price  = parseInt(document.getElementById('edit-price').value);
+    const weight = document.getElementById('edit-weight').value.trim();
+
+    if (!name || !price) { showToast('Введіть назву та ціну', 'error'); return; }
+
+    try {
+      await apiFetch(`/menu/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ category: cat, name, description: desc, price, weight })
+      });
+      closeModal();
+      showToast('Збережено! ✅');
+      loadMenu();
+    } catch {
+      showToast('Помилка збереження', 'error');
+    }
+  }
+
+  // ── TOGGLE / DELETE ─────────────────────────────────────────
+  async function toggleItem(id) {
+    try {
+      await apiFetch(`/menu/${id}/toggle`, { method: 'PATCH' });
+      showToast('Статус змінено ✅');
+      loadMenu();
+    } catch {
+      showToast('Помилка', 'error');
+    }
+  }
+
+  async function deleteItem(id, name) {
+    if (!confirm(`Видалити "${name}"?`)) return;
+    try {
+      await apiFetch(`/menu/${id}`, { method: 'DELETE' });
+      showToast(`"${name}" видалено`);
+      loadMenu();
+    } catch {
+      showToast('Помилка видалення', 'error');
+    }
+  }
+
+  // ── CHANGE PASSWORD ─────────────────────────────────────────
+  async function changePassword() {
+    const oldP = document.getElementById('oldPass').value;
+    const newP = document.getElementById('newPass').value;
+    const conf = document.getElementById('confirmPass').value;
+
+    if (newP !== conf) { showToast('Паролі не збігаються', 'error'); return; }
+    if (newP.length < 6) { showToast('Пароль мінімум 6 символів', 'error'); return; }
+
+    try {
+      const res = await apiFetch('/admin/password', {
+        method: 'PUT',
+        body: JSON.stringify({ oldPassword: oldP, newPassword: newP })
+      });
+      if (res.success) {
+        showToast('Пароль змінено! ✅');
+        document.getElementById('oldPass').value = '';
+        document.getElementById('newPass').value = '';
+        document.getElementById('confirmPass').value = '';
+      } else {
+        showToast(res.error, 'error');
+      }
+    } catch {
+      showToast('Помилка', 'error');
+    }
+  }
+
+  // ── NAVIGATION ──────────────────────────────────────────────
+  function showSection(name) {
+    document.querySelectorAll('.section-page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    document.getElementById(`sec-${name}`).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'menu') loadMenu();
+  }
+
+  // ── HELPERS ─────────────────────────────────────────────────
+  function showError(el, msg) { el.textContent = msg; el.classList.add('show'); }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    document.getElementById('toast-icon').textContent = type === 'success' ? '✓' : '✕';
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
