@@ -219,4 +219,16 @@ app.put('/admin/password', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.listen(PORT, () => console.log(`🖤 Melanite API v2 на порту ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🖤 Melanite API v2 на порту ${PORT}`);
+
+  // Keep-alive — пінгуємо себе кожні 14 хвилин щоб не засинати
+  const https = require('https');
+  const SELF_URL = process.env.SELF_URL || 'https://melanite-api.onrender.com';
+
+  setInterval(() => {
+    https.get(SELF_URL, (res) => {
+      console.log(`♻️ Keep-alive: ${res.statusCode}`);
+    }).on('error', () => {});
+  }, 14 * 60 * 1000);
+});
