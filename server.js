@@ -162,6 +162,43 @@ app.patch('/menu/:id/toggle', auth, async (req, res) => {
   }
 });
 
+// GET /bookings — всі бронювання (адмін)
+app.get('/bookings', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM melanite_bookings ORDER BY created_at DESC'
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /bookings — нове бронювання (публічний)
+app.post('/bookings', async (req, res) => {
+  const { name, phone, date, guests, wishes } = req.body;
+  if (!name || !phone) return res.status(400).json({ error: 'Імʼя та телефон обовʼязкові' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO melanite_bookings (name, phone, date, guests, wishes)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [name, phone, date || null, guests || '', wishes || '']
+    );
+    res.status(201).json(rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /bookings/:id — змінити статус
+app.put('/bookings/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  try {
+    const { rows } = await pool.query(
+      'UPDATE melanite_bookings SET status=$1 WHERE id=$2 RETURNING *',
+      [status, id]
+    );
+    res.json(rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // PUT /admin/password — змінити пароль
 app.put('/admin/password', auth, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
