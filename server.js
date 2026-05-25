@@ -8,17 +8,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'melanite_secret_2025';
 
-// DB
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// Middleware
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 
-// ── Auth ─────────────────────────────────────────────────────
+// Барні категорії
+const BAR_CATEGORIES = ['cocktails', 'beer', 'wine', 'soft', 'strong'];
+
 function auth(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Немає токену' });
@@ -26,8 +26,6 @@ function auth(req, res, next) {
   catch { res.status(401).json({ error: 'Невірний токен' }); }
 }
 
-// ── Push subscriptions storage (in-memory + DB) ──────────────
-// Зберігаємо підписки в базі
 async function savePushSub(sub) {
   try {
     await pool.query(
@@ -52,10 +50,8 @@ async function removePushSub(endpoint) {
   } catch {}
 }
 
-// ── ROUTES ───────────────────────────────────────────────────
-
 app.get('/', (req, res) => {
-  res.json({ status: 'Melanite API працює ✅', version: '2.0.0' });
+  res.json({ status: 'Melanite API працює ✅', version: '2.1.0' });
 });
 
 // LOGIN
@@ -72,17 +68,23 @@ app.post('/login', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MENU
+// ── MENU (кухня) ─────────────────────────────────────────────
 app.get('/menu', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM melanite_menu WHERE is_active = true ORDER BY category, sort_order, id');
+    const { rows } = await pool.query(
+      'SELECT * FROM melanite_menu WHERE is_active = true AND category != ALL($1) ORDER BY category, sort_order, id',
+      [BAR_CATEGORIES]
+    );
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/menu/all', auth, async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM melanite_menu ORDER BY category, sort_order, id');
+    const { rows } = await pool.query(
+      'SELECT * FROM melanite_menu WHERE category != ALL($1) ORDER BY category, sort_order, id',
+      [BAR_CATEGORIES]
+    );
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -126,7 +128,33 @@ app.patch('/menu/:id/toggle', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// BOOKINGS
+// ── BAR (напої) ───────────────────────────────────────────────
+// Публічний — тільки активні барні позиції
+app.get('/bar', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM melanite_menu WHERE is_active = true AND category = ANY($1) ORDER BY category, sort_order, id',
+      [BAR_CATEGORIES]
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Адмін — всі барні позиції
+app.get('/bar/all', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM melanite_menu WHERE category = ANY($1) ORDER BY category, sort_order, id',
+      [BAR_CATEGORIES]
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Додати барну позицію (той самий /menu endpoint, просто категорія барна)
+// Редагування, видалення, toggle — ті самі /menu/:id endpoints
+
+// ── BOOKINGS ─────────────────────────────────────────────────
 app.get('/bookings', auth, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM melanite_bookings ORDER BY created_at DESC');
@@ -144,7 +172,6 @@ app.post('/bookings', async (req, res) => {
     );
     const booking = rows[0];
 
-    // Відправляємо push сповіщення
     const subs = await getPushSubs();
     if (subs.length > 0) {
       const payload = JSON.stringify({
@@ -154,15 +181,13 @@ app.post('/bookings', async (req, res) => {
         badge: '/icon-192.png',
         data: { url: '/admin.html' }
       });
-      // Простий fetch до кожного endpoint
       for (const sub of subs) {
         try {
-          // Зберігаємо для polling
           await pool.query(
             'INSERT INTO melanite_notifications (payload, created_at) VALUES ($1, NOW())',
             [payload]
           );
-          break; // одна нотифікація достатньо
+          break;
         } catch {}
       }
     }
@@ -179,7 +204,34 @@ app.put('/bookings/:id', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PUSH — реєстрація підписки
+app.delete('/bookings/:id', auth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM melanite_bookings WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// REVIEWS
+app.get('/reviews', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM melanite_reviews WHERE is_active = true ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/reviews', async (req, res) => {
+  const { name, rating, text } = req.body;
+  if (!name || !rating || !text) return res.status(400).json({ error: 'Всі поля обовʼязкові' });
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO melanite_reviews (name, rating, text) VALUES ($1,$2,$3) RETURNING *',
+      [name, rating, text]
+    );
+    res.status(201).json(rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUSH
 app.post('/push/subscribe', auth, async (req, res) => {
   try {
     await savePushSub(req.body);
@@ -194,7 +246,6 @@ app.delete('/push/subscribe', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PUSH POLLING — адмін питає чи є нові сповіщення
 app.get('/push/poll', auth, async (req, res) => {
   try {
     const since = req.query.since || new Date(0).toISOString();
@@ -220,12 +271,10 @@ app.put('/admin/password', auth, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🖤 Melanite API v2 на порту ${PORT}`);
+  console.log(`🖤 Melanite API v2.1 на порту ${PORT}`);
 
-  // Keep-alive — пінгуємо себе кожні 14 хвилин щоб не засинати
   const https = require('https');
   const SELF_URL = process.env.SELF_URL || 'https://melanite-api.onrender.com';
-
   setInterval(() => {
     https.get(SELF_URL, (res) => {
       console.log(`♻️ Keep-alive: ${res.statusCode}`);
